@@ -16,7 +16,7 @@ The relevance scorer test suite has a test named `test_query_with_partial_overla
 - **Tier fit:** This is a Tier 1 issue and is a good first contribution because the fix is confined to a single test fixture and requires no changes to production code or other modules.
 - **Codebase readiness:** I read the full test file and the scorer implementation to understand how keyword overlap is computed before selecting this issue.
 - **Testing:** I ran `pytest tests/unit/test_relevance_scorer.py -q` and confirmed the reported failure: 1 failed, 18 passed, with the failing assertion showing the actual score was `1.0`.
-- **Rough plan:** I will revise the test fixture so only some of the query terms appear in the chunk, rerun the unit tests to confirm they pass, and verify that no changes are needed in the scorer itself.
+- **Rough plan:** I will revise the test fixture so only some of the query terms appear in the chunk, rerun the unit tests to confirm they pass, and then verify that no changes are needed in the scorer itself.
 - **Claims:** I reviewed the issue activity and the cohort ledger and understand that claims are non-exclusive. I am fine working on this issue alongside other contributors.
 - **Time and scope:** The change is small and self-contained, so it fits comfortably within the Week 9 deadline.
 - **Dependencies:** I did not find any open blockers or prerequisite issues that need to be resolved before this fix can be made.
