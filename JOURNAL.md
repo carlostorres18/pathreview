@@ -21,8 +21,21 @@ The relevance scorer test suite has a test named `test_query_with_partial_overla
 - **Time and scope:** The change is small and self-contained, so it fits comfortably within the Week 9 deadline.
 - **Dependencies:** I did not find any open blockers or prerequisite issues that need to be resolved before this fix can be made.
 
+## Week 8 — Reproduction & solution planning
 
-**Branch name:** test/157/relevance-scorer-test-overlap
+**Reproduction commit link:** https://github.com/carlostorres18/pathreview/commit/c2369955b4fcf4d446d76cc4792006232e00ef04
+
+**Reproduction summary:**
+Ran `.venv/bin/pytest tests/unit/test_relevance_scorer.py -q` and observed `1 failed, 18 passed`. The failure is `test_query_with_partial_overlap`, which asserts `0.3 < score < 0.9` but got `score == 1.0` — the logged output shows `avg_score=1.0` because the chunk fixture text contains every token from the query, so the scorer correctly reports full overlap instead of the partial overlap the test name implies.
+
+**PLAN.md link:** [PLAN.md](./PLAN.md) (this repo, root of branch `test/157-relevance-scorer-test-overlap`)
+
+**Walkthrough video (recommended):** [Issue #157 Loom Video](https://www.loom.com/share/5d978a143ea84e559868a6b9d4fa0d74)
+
+**Blockers or open questions:**
+None currently — the fix is confined to rewriting one chunk-text fixture. The only thing to double-check while implementing is that the replacement text lands the overlap ratio inside `(0.3, 0.9)` and doesn't accidentally hit the zero-overlap or full-overlap paths instead, since `RelevanceScorer._tokenize` does a naive `.lower().split()` with no punctuation stripping or stemming.
+
+**Branch name:** test/157-relevance-scorer-test-overlap
 
 **Setup confirmation:** [X] App runs locally at localhost:5173
 
