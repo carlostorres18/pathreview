@@ -40,3 +40,35 @@ None currently — the fix is confined to rewriting one chunk-text fixture. The 
 **Setup confirmation:** [X] App runs locally at localhost:5173
 
 **Cohort ledger:** [X] Issue added to cohort ledger
+
+## Week 9 — Solution building & PR submission
+
+### Check-in 1 (mid-week)
+
+**Current progress:**
+Implemented the PLAN.md fix: rewrote the chunk text in `test_query_with_partial_overlap` (`tests/unit/test_relevance_scorer.py`) so it genuinely omits two of the four query tokens (`python`, `framework`), producing a partial-overlap score of 0.5 instead of the full-overlap 1.0 that was causing the failure. Steps 1–3 from PLAN.md are done: fixture rewritten, overlap ratio hand-verified before running, and the targeted test confirmed passing (`test_query_with_partial_overlap` PASSED, all 19 tests in the file pass).
+
+**Next steps:**
+Run the full unit suite and `make check` to confirm no regressions elsewhere, then commit and open the PR (PLAN.md steps 4–5).
+
+**Blockers:**
+None on the fix itself. Discovered along the way that `make test-unit`, `make lint`, and `make typecheck` all have pre-existing, unrelated failures repo-wide (52 failing unit tests, 182 ruff errors, 5 mypy errors from missing stubs and a numpy/mypy version mismatch) — confirmed via `git stash` that these predate this branch and aren't caused by this change, so they're out of scope for #157.
+
+---
+
+### Check-in 2 (end of week)
+
+**PR link:** https://github.com/ascherj/pathreview/pull/557
+
+**Branch:** `test/157-relevance-scorer-test-overlap`
+
+**What you built:**
+Fixed the fixture bug in `test_query_with_partial_overlap`: the chunk text previously contained every query token, so the scorer correctly returned a full-overlap score of 1.0 and the `0.3 < score < 0.9` assertion failed. The chunk text now genuinely omits some query terms, so the test exercises the intended partial-match path (score = 0.5). No production code in `rag/evaluator/relevance_scorer.py` changed — the scorer's logic was already correct.
+
+**Tests added or updated:**
+Only `tests/unit/test_relevance_scorer.py` — updated the `test_query_with_partial_overlap` fixture text and comment, and added missing type annotations across all 19 test methods (plus one `chunks: list[dict]` var annotation) so the file satisfies the mypy pre-commit hook. No new test files were added; all 19 existing tests in this file cover the scorer's behavior and now pass.
+
+**Self-review confirmation:** [ ] make check passes  [ ] make test-unit passes
+> Both commands exit with errors when run repo-wide, but neither failure is related to this change: `make test-unit` goes from 53 failed/375 passed (pre-fix) to 52 failed/376 passed (post-fix) — exactly the targeted test flipped, nothing else changed. `make check` fails on 182 pre-existing ruff errors and 5 pre-existing mypy errors elsewhere in the repo; `ruff check tests/unit/test_relevance_scorer.py` and the mypy pre-commit hook both pass cleanly on the file I touched.
+
+**Draft PR feedback received from:** none
