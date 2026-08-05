@@ -72,3 +72,34 @@ Only `tests/unit/test_relevance_scorer.py` — updated the `test_query_with_part
 > Both commands exit with errors when run repo-wide, but neither failure is related to this change: `make test-unit` goes from 53 failed/375 passed (pre-fix) to 52 failed/376 passed (post-fix) — exactly the targeted test flipped, nothing else changed. `make check` fails on 182 pre-existing ruff errors and 5 pre-existing mypy errors elsewhere in the repo; `ruff check tests/unit/test_relevance_scorer.py` and the mypy pre-commit hook both pass cleanly on the file I touched.
 
 **Draft PR feedback received from:** none
+
+## Week 10 — Iteration & reflection
+
+### Reviewer feedback
+
+**Feedback received:** [ ] Yes  [x] No — still awaiting review
+
+**Summary of feedback:**
+No review has come in yet on PR #557 as of this writing.
+
+**How you responded:**
+N/A — nothing to respond to yet. If review comments come in before the module closes, I'll update this section with what was raised and how I addressed it.
+
+---
+
+### Reflection
+
+**What was harder than you expected?**
+The fix itself — a one-line fixture change — was straightforward once I traced the scoring logic. What surprised me was how much friction showed up *after* the fix was written. `make check` and `make test-unit` only run mypy/ruff against `api/`, `core/`, `ingestion/`, `rag/`, `agent/`, and `safety/` — they never touch `tests/` — so both commands looked clean locally. But the repo's `pre-commit` hook runs `mypy` against whatever files are actually staged, `tests/` included, and it rejected my commit over 21 pre-existing missing type annotations elsewhere in `test_relevance_scorer.py` that had nothing to do with my change. I had to diff the mypy scope in `Makefile` against `.pre-commit-config.yaml` to even understand why a "passing" file was blocking a commit, then add annotations across the whole file to get past the hook. I also learned to distrust "182 lint errors" and "52 failing tests" as signals about *my* change specifically — I used `git stash` to diff pass/fail counts before and after my edit, which was the only way to prove those failures were pre-existing and not something I'd introduced.
+
+**What did you learn about working in a large codebase?**
+Contributing to someone else's codebase means the safety net (CI config, lint rules, test markers, Makefile targets) was written by people who understood tradeoffs I didn't have visibility into yet — like why `make typecheck` deliberately excludes `tests/`. Instead of assuming a failing check means my code is wrong, I learned to first ask "is this pre-existing, and is it in scope for the issue I'm fixing?" before touching anything outside the files the issue actually calls for. I leaned on AI to quickly read across files I hadn't touched yet — the scorer implementation, the Makefile, the pre-commit config — so I could reason about *why* a check was failing instead of just reacting to red text in the terminal.
+
+**How did AI tools help — and where did they fall short?**
+AI was most useful for fast comprehension: tracing how `RelevanceScorer.score()` tokenizes and compares query/chunk text, confirming my replacement fixture would land the overlap ratio inside the asserted range before I ran anything, and explaining *why* the pre-commit hook disagreed with `make check`. It also caught that the whole test file was pre-existing tech debt (see this exact issue class) rather than something to work around case by case. Where it fell short — or rather, where it needed me to make the call — was scope: deciding whether to add type annotations across the whole file (arguably out-of-scope for #157) versus bypassing the hook was a judgment call about tradeoffs the AI could lay out but shouldn't make unilaterally, so I decided explicitly rather than letting it just push through.
+
+**What would you do differently if you started over?**
+I'd run the actual `pre-commit` hooks locally right after writing the fix — not just `make check` — so I'd hit the annotation issue during implementation instead of at commit time. I'd also skim `.pre-commit-config.yaml` alongside the `Makefile` during issue selection, so I know upfront which checks are enforced at commit-time versus CI-time before I've already written the fix.
+
+**What are you most proud of from this module?**
+Tackling a Tier 1 issue end-to-end — reproducing it, tracing root cause instead of just silencing the assertion, and verifying with before/after test counts that my fix didn't mask or introduce anything — gave me a repeatable process I trust for picking up the next issue faster. It's also good preparation heading into AI301 in Fall 2026, since a lot of this module was really about learning to read a codebase's own conventions before changing it.
